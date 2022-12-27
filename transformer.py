@@ -10,14 +10,14 @@ class Transformer(nn.Module):
         self,
         src_vocab_size,
         src_pad_idx,
-        trg_pad_idx,
         trg_vocab_size,
-        d_model=512,
-        max_seq_len=100,
-        heads_num=8,
-        forward_expansion=4,
-        dropout=0.1,
-        layers_num=6,
+        trg_pad_idx,
+        d_model,
+        max_seq_len,
+        heads_num,
+        forward_expansion,
+        dropout,
+        layers_num,
     ):
         super().__init__()
         self.src_pad_idx = src_pad_idx

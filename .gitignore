@@ -14,3 +14,4 @@ ipython_config.py
 # pyenv
 .python-version
 .cache
+.data
