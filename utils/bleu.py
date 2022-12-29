@@ -4,7 +4,7 @@ import numpy as np
 from collections import Counter
 
 
-def compute_ngrams_precision(reference, candidate):
+def compute_bleu(reference, candidate):
     """
     Creates 1-4 grams of the reference and candidate
     and appends the precision of the candidate's to
@@ -45,10 +45,3 @@ def compute_ngrams_precision(reference, candidate):
     )
     bleu_score = brevity_penalty * np.mean(precision) * 100
     return bleu_score
-
-
-def compute_bleu(reference_batch, candidate_bath):
-    batch_bleu_score = 0
-    for (r, c) in zip(reference_batch, candidate_bath):
-        batch_bleu_score += compute_ngrams_precision(r, c)
-    return np.round(batch_bleu_score / len(reference_batch), 2)
