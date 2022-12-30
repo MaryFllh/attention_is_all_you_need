@@ -71,6 +71,40 @@ def validate(model, data_iterator, device, criterion, trg_vocab):
     return val_loss, val_bleu_score
 
 
+def run(
+    model, train_data_iterator, val_data_iterator, device, criterion, clip, trg_vocab
+):
+    train_losses, val_losses, bleu_scores = [], [], []
+    best_loss = float("Inf")
+    for epoch in range(config.EPOCHS):
+        train_loss = train(model, train_data_iterator, device, criterion, clip)
+        val_loss, bleu_score = validate(
+            model, val_data_iterator, device, criterion, trg_vocab
+        )
+
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+        if val_loss < best_loss:
+            torch.save(model.state_dict(), f"saved/model_{val_loss}.pt")
+            best_loss = val_loss
+
+        f = open("result/train_loss.txt", "w")
+        f.write(str(train_losses))
+        f.close()
+
+        f = open("result/bleu.txt", "w")
+        f.write(str(bleu_scores))
+        f.close()
+
+        f = open("result/val_loss.txt", "w")
+        f.write(str(val_losses))
+        f.close()
+
+        print(f"Train loss at epoch {epoch} is: {train_loss}")
+        print(f"Val loss at epoch {epoch} is {val_loss}")
+        print(f"Bleu score at epoch {epoch} is {bleu_score}")
+
+
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     src_vocab_size = len(en_vocab)
@@ -83,12 +117,12 @@ if __name__ == "__main__":
         src_pad_idx,
         trg_vocab_size,
         trg_pad_idx,
-        config.d_model,
-        config.max_seq_len,
-        config.heads_num,
-        config.forward_expansion,
-        config.dropout,
-        config.layers_num,
+        config.D_MODEL,
+        config.MAX_SEQ_LEN,
+        config.HEADS_NUM,
+        config.FORWARD_EXPANSION,
+        config.DROPOUT,
+        config.LAYERS_NUM,
     )
 
     model.apply(iniatialize_weights)
@@ -97,10 +131,19 @@ if __name__ == "__main__":
         config.d_model,
         Adam(
             params=model.parameters(),
-            lr=config.init_learning_rate,
-            betas=(config.beta1, config.beta2),
-            eps=config.eps,
+            lr=config.INIT_LEARNING_RATE,
+            betas=(config.BETA1, config.BETA2),
+            eps=config.EPS,
         ),
     )
 
     criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
+    run(
+        model,
+        train_iter,
+        val_iter,
+        device,
+        criterion,
+        clip=config.CLIP,
+        trg_vocab=fr_vocab,
+    )
