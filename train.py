@@ -5,8 +5,8 @@ import config
 from torch.optim import Adam
 
 from transformer import Transformer
-from train.load_data import train_iter, val_iter, en_vocab, fr_vocab
-from optimizer import Optimizer
+from utils.load_data import train_iter, val_iter, en_vocab, fr_vocab
+from utils.optimizer import Optimizer
 
 from utils.bleu import compute_bleu
 from utils.utils import idx_to_sentence
@@ -15,7 +15,8 @@ from utils.utils import idx_to_sentence
 
 
 def iniatialize_weights(model):
-    return nn.init.kaiming_uniform(model.weight.data)
+    if hasattr(model, "weight") and model.weight.dim() > 1:
+        nn.init.kaiming_uniform(model.weight.data)
 
 
 def train(model, data_iterator, device, optimizer, criterion, clip):
@@ -24,7 +25,7 @@ def train(model, data_iterator, device, optimizer, criterion, clip):
     for i, (fr_batch, en_batch) in enumerate(data_iterator):
         src = fr_batch.to(device)
         trg = en_batch.to(device)
-        optimizer.zerograd()
+        optimizer.optimizer.zero_grad()
 
         output = model(src, trg[:, :-1])
         reshaped_output = output.contiguous().view(-1, output.shape[-1])
@@ -72,12 +73,21 @@ def validate(model, data_iterator, device, criterion, trg_vocab):
 
 
 def run(
-    model, train_data_iterator, val_data_iterator, device, criterion, clip, trg_vocab
+    model,
+    train_data_iterator,
+    val_data_iterator,
+    device,
+    optimizer,
+    criterion,
+    clip,
+    trg_vocab,
 ):
     train_losses, val_losses, bleu_scores = [], [], []
     best_loss = float("Inf")
     for epoch in range(config.EPOCHS):
-        train_loss = train(model, train_data_iterator, device, criterion, clip)
+        train_loss = train(
+            model, train_data_iterator, device, optimizer, criterion, clip
+        )
         val_loss, bleu_score = validate(
             model, val_data_iterator, device, criterion, trg_vocab
         )
@@ -128,13 +138,14 @@ if __name__ == "__main__":
     model.apply(iniatialize_weights)
 
     optimizer = Optimizer(
-        config.d_model,
+        config.D_MODEL,
         Adam(
             params=model.parameters(),
             lr=config.INIT_LEARNING_RATE,
             betas=(config.BETA1, config.BETA2),
             eps=config.EPS,
         ),
+        config.WARM_UP,
     )
 
     criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
@@ -143,6 +154,7 @@ if __name__ == "__main__":
         train_iter,
         val_iter,
         device,
+        optimizer,
         criterion,
         clip=config.CLIP,
         trg_vocab=fr_vocab,
