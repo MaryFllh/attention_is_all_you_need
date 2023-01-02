@@ -4,17 +4,29 @@ Implementation of Transformers as described by the [Attention Is All You Need pa
 The structure of the repository is as follows:
 ```
 .
+├── config.py
+├── data
+│   └── data.py
 ├── embeddings
-│   ├── embedder.py
-│   └── postional_encoder.py
+│   ├── embedder.py
+│   └── postional_encoder.py
+├── graphs
+│   └── positional_encodings.png
 ├── layers
-│   ├── decoder.py
-│   └── encoder.py
+│   ├── decoder.py
+│   └── encoder.py
 ├── sublayers
-│   ├── multihead_attention.py
-│   ├── point_wise_feed_forward.py
-│   └── scaled_dot_product_attention.py
-└── transformer.py
+│   ├── multihead_attention.py
+│   ├── point_wise_feed_forward.py
+│   └── scaled_dot_product_attention.py
+├── train.py
+├── transformer.py
+└── utils
+    ├── bleu.py
+    ├── label_smoothing.py
+    ├── load_data.py
+    ├── map_idx_to_sentence.py
+    └── optimizer.py
 ```
 ## embeddings/
 ### Input Embeddings:
@@ -498,4 +510,47 @@ class Transformer(nn.Module):
         decoder_out = self.decoder(encoder_out, trg, trg_mask)
         return decoder_out
 ```
+## utils/optimizer.py
+Implements Adam optimizer with a dynamic learning rate according to the below formula:
 
+```
+class Optimizer:
+    # Used https://nlp.seas.harvard.edu/2018/04/03/attention.html#training-loop as ref
+    def __init__(self, d_model, optimizer, warmup):
+        """
+        Optimizer wrapper implemening a dynamic lr with warmup
+        """
+        self.d_model = d_model
+        self.optimizer = optimizer
+        self.warmup = warmup
+        self._step = 0
+        self._rate = 0
+
+    def step(self):
+        """
+        Updates the parameters and rate
+        """
+        self._step += 1
+        rate = self.compute_learning_rate()
+        for p in self.optimizer.param_groups:
+            p["lr"] = rate
+        self._rate = rate
+        self.optimizer.step()
+
+    def compute_learning_rate(self, step=None):
+        """
+        Computes the learning rate based on the step number
+        """
+        if step is None:
+            step = self._step
+        return (self.d_model**-0.5) * min(
+            step ** (-0.5), step * self.warmup ** (-1.5)
+        )
+```
+
+## References
+1. https://arxiv.org/pdf/1706.03762.pdf
+2. https://nlp.seas.harvard.edu/2018/04/03/attention.html
+3. https://jalammar.github.io/illustrated-transformer/
+4. https://www.youtube.com/watch?v=U0s0f995w14
+5. https://github.com/hyunwoongko/transformer

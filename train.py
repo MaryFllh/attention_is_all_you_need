@@ -9,7 +9,7 @@ from utils.load_data import train_iter, val_iter, en_vocab, fr_vocab
 from utils.optimizer import Optimizer
 
 from utils.bleu import compute_bleu
-from utils.utils import idx_to_sentence
+from utils.map_idx_to_sentence import idx_to_sentence
 
 # from label_smoothing import LabelSmoothing # TODO: add later
 
