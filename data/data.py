@@ -64,8 +64,8 @@ class Data:
                 torch.cat(
                     [
                         torch.tensor([self.sos_idx])
-                        + fr_item
-                        + torch.tensor([self.eos_idx])
+                        , fr_item
+                        , torch.tensor([self.eos_idx])
                     ],
                     dim=0,
                 )
@@ -74,13 +74,12 @@ class Data:
                 torch.cat(
                     [
                         torch.tensor([self.sos_idx])
-                        + en_item
-                        + torch.tensor([self.eos_idx])
+                        , en_item
+                        , torch.tensor([self.eos_idx])
                     ],
                     dim=0,
                 )
             )
-
         fr_batch = pad_sequence(fr_batch, padding_value=self.pad_idx)
         en_batch = pad_sequence(en_batch, padding_value=self.pad_idx)
         return fr_batch, en_batch
