@@ -82,7 +82,7 @@ class Data:
             )
         fr_batch = pad_sequence(fr_batch, padding_value=self.pad_idx)
         en_batch = pad_sequence(en_batch, padding_value=self.pad_idx)
-        return fr_batch, en_batch
+        return torch.transpose(fr_batch, 0, 1), torch.transpose(en_batch, 0, 1)
 
     def load_data(self, data, batch_size):
         return DataLoader(

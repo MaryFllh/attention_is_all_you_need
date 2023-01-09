@@ -26,7 +26,6 @@ def train(model, data_iterator, device, optimizer, criterion, clip):
         src = fr_batch.to(device)
         trg = en_batch.to(device)
         optimizer.optimizer.zero_grad()
-
         output = model(src, trg[:, :-1])
         reshaped_output = output.contiguous().view(-1, output.shape[-1])
         trg = trg[:, 1:].contiguous().view(-1)
@@ -37,7 +36,7 @@ def train(model, data_iterator, device, optimizer, criterion, clip):
         optimizer.step()
 
         train_loss += loss.item()
-        print("Iteration: ", i, "with loss: ", loss.item())
+        print("Iteration: ", i + 1, "with loss: ", loss.item())
     return train_loss / len(data_iterator)
 
 
@@ -117,9 +116,9 @@ def run(
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    src_vocab_size = len(en_vocab)
+    src_vocab_size = len(fr_vocab)
     src_pad_idx = en_vocab["<pad>"]
-    trg_vocab_size = len(fr_vocab)
+    trg_vocab_size = len(en_vocab)
     trg_pad_idx = fr_vocab["<pad>"]
 
     model = Transformer(
